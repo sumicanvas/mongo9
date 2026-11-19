@@ -68,6 +68,24 @@ Load Shedding을 켜면 클러스터가 지속적으로 과부하 상태일 때 
 * `Sustained load shedding`, `Sustained ingress queue pressure`, `Sustained execution-control queue pressure` 관련 알림과 애플리케이션 오류율·재시도율·지연시간을 함께 살펴보세요.
 * 거절이 지속되면 단순히 재시도 횟수만 늘리기보다 요청량, 재시도 정책, 쿼리/인덱스, 클러스터 용량 및 autoscaling을 함께 검토하세요.
 
+### Atlas 네트워킹·암호화
+
+* **Google Cloud PSC 포트 매핑:** 여러 Atlas 노드를 서로 다른 포트로 구분하면서 고객 측 IP 주소 하나를 공유할 수 있어, 기존 구성 대비 IP 주소 및 네트워크 리소스 사용량을 줄입니다. 보통 리전별 IP 사용량 절감으로 설명하는 것이 정확합니다. ([PSC 포트 매핑 설명](https://www.mongodb.com/company/blog/technical/port-mapping-for-google-private-service-connect-on-mongodb-atlas))
+* **AWS PrivateLink 리전 간 연결:** 다른 AWS 리전에 있는 애플리케이션이 Atlas 클러스터에 private endpoint를 통해 사설 연결을 할 수 있습니다. 연결을 허용할 리전 구성을 확인해야 합니다. ([Atlas 변경 기록](https://www.mongodb.com/docs/atlas/release-notes/changelog/))
+* **Azure Key Vault 저장 데이터 암호화(EAR) Secretless 인증:** Atlas 관리 Azure Service Principal을 승인해, 장기 보관 client secret 대신 Azure가 발급하는 단기 OAuth 2.0 토큰으로 Key Vault에 인증합니다. 이는 저장 데이터 암호화용 고객 관리 키의 인증 방식이며, Key Vault나 암호화 키 자체를 없애는 기능은 아닙니다. ([Secretless 인증 설정](https://www.mongodb.com/docs/atlas/security/azure-kms-secretless/))
+* **발표 문구:** 세 항목은 MongoDB 9.0의 보안 연결 및 암호화 확장이라는 큰 주제에 해당합니다. 다만 Azure Key Vault 항목은 네트워킹 자체라기보다 암호화 키 접근 인증 개선입니다. MongoDB 공식 제품 블로그의 표현은 “expands secure connectivity and encryption capabilities”입니다. ([MongoDB 9.0 발표](https://www.mongodb.com/company/blog/product-release-announcements/mongodb-9-0-this-is-what-a-database-should-be))
+
+### MongoDB Server 9.0
+
+* **서버 측 JavaScript:** 8.0에서 deprecated였던 `$function`, `$accumulator`, `$where`가 9.0에서 WASM 기반 JavaScript 엔진을 사용해 더 이상 deprecated가 아닙니다. 단, `ppc64le`에서는 JavaScript 엔진이 포함되지 않아 사용할 수 없습니다. 또한 JavaScript의 local Date 연산은 호스트 시간대가 아니라 UTC로 처리되므로 업그레이드 전 동작을 점검하세요. ([9.0 릴리스 노트](https://www.mongodb.com/docs/manual/release-notes/9.0/), [호환성 변경사항](https://www.mongodb.com/docs/manual/release-notes/9.0-compatibility/))
+* **`useInternalAuthzForX509`:** 9.0에 추가된 파라미터입니다. `true`이면 LDAP authorization이 설정되어 있어도 X.509 인증 클라이언트에 내부 authorization을 사용합니다. X.509 이외의 인증 방식에는 영향을 주지 않습니다. ([9.0 릴리스 노트](https://www.mongodb.com/docs/manual/release-notes/9.0/))
+* **`usersInfo.authenticatedMechanism`:** 9.0에서 `usersInfo` 명령에 추가된 optional 문자열 **입력 필드**입니다. 조회 시 어떤 인증 메커니즘 및 authorization backend를 기준으로 사용자 정보를 확인할지 지정합니다. 응답에 추가되는 필드라고 표현하지 않도록 주의하세요. ([9.0 릴리스 노트](https://www.mongodb.com/docs/manual/release-notes/9.0/))
+* **감사 로그 연결 필드:** MongoDB 감사 스키마에는 `directRemote`, OCSF 스키마에는 `direct_endpoint`가 추가되어 실제 TCP peer를 기록합니다. PROXY protocol header에 실린 클라이언트 주소 주장과 별도로 peer 주소를 확인할 수 있습니다. ([9.0 릴리스 노트](https://www.mongodb.com/docs/manual/release-notes/9.0/))
+* **수신 BSON 검증:** 9.0부터 서버가 수신하는 BSON 객체를 기본 검증하며, `net.wireObjectCheck`와 관련 `--objcheck` / `--noobjcheck` 인수는 deprecated입니다. ([9.0 릴리스 노트](https://www.mongodb.com/docs/manual/release-notes/9.0/))
+
+
+
+
 ## 적용 전 체크리스트
 
 * [ ] Atlas 클러스터가 MongoDB 9.0+ M30+ replica set인지 확인
@@ -77,6 +95,8 @@ Load Shedding을 켜면 클러스터가 지속적으로 과부하 상태일 때 
 * [ ] 재시도 횟수, 총 대기 시간, jitter 및 중단 조건 설정
 * [ ] Atlas metrics, 알림 및 운영 대응 담당자 확인
 * [ ] 가능하면 운영 전 Load Shedding 테스트로 전체 경로 검증
+
+
 
 ## 공식 문서
 
